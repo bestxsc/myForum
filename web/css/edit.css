@@ -1,0 +1,17 @@
+@import url('http://cdn.gbtags.com/font-awesome/4.1.0/css/font-awesome.min.css');
+@import url('http://cdn.gbtags.com/summernote/0.5.2/summernote.css');
+body {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background-color: #eee;
+    font-family: "Arial","Microsoft YaHei","黑体","宋体",sans-serif;
+}
+hr {
+    border-top: 1px solid #cecece;
+}
+.copy-right {
+    text-align: center;
+    line-height: 50px;
+    margin-top: 10px;
+    color: #676767;
+}
