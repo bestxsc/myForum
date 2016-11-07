@@ -14,33 +14,39 @@ import java.util.logging.Logger;
 
 public class MyCore {
     static private Logger mlog;
-    private Connection con = null;
+    private Connection con = null;//Connection不是一个接口么,为什么这里当作一个类
     private TokenManager tm = null;
-    private static final String JDBC_MYSQL_URL = "jdbc:mysql://127.0.0.1:3306/ceshi?useUnicode=true&characterEncoding=utf8";
+    private static final String JDBC_MYSQL_URL = "jdbc:mysql://localhost:3306/ceshi?useUnicode=true&characterEncoding=utf8";
     private static final String JDBC_MYSQL_UNAME = "root";
     private static final String JDBC_MYSQL_PASS = "root";
 
-    static {
+    static {//这个是方法还是？
         mlog = Logger.getLogger("my.MyCore");
     }
 
     public MyCore(){
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
+//          连接到数据库的状态用con来存储
             con = DriverManager.getConnection(JDBC_MYSQL_URL, JDBC_MYSQL_UNAME, JDBC_MYSQL_PASS);
+//          初始化tokenmanager类的tm
             tm = new TokenManager();
+//          日志中添加“成功连接到数据库！”
             mlog.info("成功连接数据库！");
         } catch (Exception e) {
-            mlog.warning("数据库连接失败：" + e.getMessage());
+//          日志中添加“数据库连接失败”和异常信息
+        	mlog.warning("数据库连接失败：" + e.getMessage());
+//        	在命令行打印错误信息
             e.printStackTrace();
         }
     }
-
+//b=boolean，判断uid等的真假
     private static String someSQL(boolean buid, boolean buname, boolean bname, boolean bgroup){
         String sql = "SELECT * FROM user WHERE";
         if (buid || buname || bname || bgroup){
             if (buid){
                 if (buname || bname || bgroup){
+//                	问号的含义是什么
                     sql += " user.uid = ? AND";
                 } else {
                     sql += " user.uid = ?";
@@ -70,33 +76,42 @@ public class MyCore {
     }
 
     public List<Person> getPersons(String uid, String uname, String name, String group, int page, int offset){
+//    	不明白
         String sql = someSQL(!(uid == null || uid.isEmpty()),
                 !(uname == null || uname.isEmpty()),
                 !(name == null || name.isEmpty()),
                 !(group == null || group.isEmpty()));
 
+//      经过预编译的statement，进行数据库的操作
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<Person> L = new ArrayList<>();
-
+//		Queue是队列的意思，是Linkedlist的父接口
         Queue<String>  Q = new LinkedList<>();
         if (!(uid == null || uid.isEmpty())) Q.add(uid);
         if (!(uname == null || uname.isEmpty())) Q.add(uname);
         if (!(name == null || name.isEmpty())) Q.add(name);
         if (!(group == null || group.isEmpty())) Q.add(group);
-
+//		如果con为空或者缓冲池链接成功或者page小于0或者offset（元素相对于文档的偏移，即位置）小于0，那么返回L（为什么返回L？）
         if (con == null || !tm.state || page < 0 || offset < 0) return L;
         try {
-            ps = con.prepareStatement(sql);
+//          设置预处理语句
+        	ps = con.prepareStatement(sql);
             int i = 1;
+//          当Q不为空是开始循环
             while (!Q.isEmpty()){
+//            	将i赋给Q.poll；Q.pool方法的作用是获取并移除此列的头，如果队列为空则返回null。
                 ps.setString(i, Q.poll());
                 i++;
             }
+//          给page设定i这个参数
             ps.setInt(i, page);
             ps.setInt(++i, offset);
+//          在ps对象内执行sql查询，返回查询值
             rs = ps.executeQuery();
+//          当有下一个值时
             while (rs.next()) {
+//            	list中添加一个新的person，参数为下标为""处的整型值 --->getInt方法：获取下表uid处的整型值
                 L.add(new Person(rs.getInt("uid"),
                         rs.getString("uname"),
                         rs.getString("name"),
@@ -109,9 +124,11 @@ public class MyCore {
             return L;
         } finally {
             try {
+//            	预处理不为空时关闭数据库
                 if (ps != null) {
                     ps.close();
                 }
+//              如果resultset为空时，关闭数据库 --->resultset.close方法：立即释放指向的数据库或JDBC资源
                 if (rs != null) {
                     rs.close();
                 }
@@ -123,17 +140,18 @@ public class MyCore {
     }
 
     private Map<String,String> getPerson(int uid){
-        String sql = "SELECT * FROM user WHERE user.uid = ? LIMIT 1";
+        String sql = "SELECT * FROM user WHERE user.uid = ? LIMIT 1";//这个问号的值怎么被替换？
         PreparedStatement ps = null;
         ResultSet rs = null;
         Map<String, String> R = new HashMap<>();
+//      如果con的值为空或者tm的state属性为假，那么返回map类的r
         if (con == null || !tm.state) return R;
         try {
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, uid);
+            ps = con.prepareStatement(sql);//把sql搜索后的数据赋给ps变量
+            ps.setInt(1, uid);//preparestatement的第一个参数设置为int类型的uid
             rs = ps.executeQuery();
             while (rs.next()) {
-                R.put("uid", rs.getString("uid"));
+                R.put("uid", rs.getString("uid"));//把rs中uid的值与r这个map中的uid关联；
                 R.put("uname", rs.getString("uname"));
                 R.put("password", rs.getString("password"));
                 R.put("name", rs.getString("name"));
@@ -144,7 +162,7 @@ public class MyCore {
         } catch (Exception e) {
             mlog.warning(e.getMessage());
             return R;
-        } finally {
+        } finally {//finally里的代码无论是否异常都会执行
             try {
                 if (ps != null) {
                     ps.close();
@@ -282,7 +300,7 @@ public class MyCore {
             }
         }
     }
-
+//  删
     public void deleNotice(String token, int nid){
         String sql = "DELETE FROM `notices` WHERE (`id`=?)";
         PreparedStatement ps = null;
@@ -305,7 +323,7 @@ public class MyCore {
             }
         }
     }
-
+//	更新用户
     private static String somesSQL(boolean buname, boolean bname, boolean bgroup, boolean bpublishing, boolean breply, boolean bpass){
         String sql = "UPDATE `user` SET";
         if (buname || bname || bgroup || bpublishing || breply || bpass){
@@ -352,7 +370,7 @@ public class MyCore {
         }
         return sql + "WHERE (`uid`= ? ) LIMIT 1";
     }
-
+//	修改用户
     public void setUser(String token, String uid, String newuname, String newname, String newpass, String newgroup, String publishing, String reply) throws SQLException {
         String sql = somesSQL(!(newuname == null || newuname.isEmpty()),
                 !(newname == null || newname.isEmpty()),
@@ -405,7 +423,7 @@ public class MyCore {
             }
         }
     }
-
+//	删除用户
     public void deleUser(String token, ArrayList<Integer> muids) throws Exception{
         String sql = "DELETE FROM `user` WHERE (`uid`=?)";
         PreparedStatement ps = null;
@@ -432,7 +450,7 @@ public class MyCore {
             }
         }
     }
-
+//	增加用户
     public void addUser(String token, String uname, String password, String name, boolean p, boolean r) throws RuntimeException{
         String sql = "INSERT INTO `user` (`uname`, `password`, `name`, `publishing`, `reply`) VALUES (?, ?, ?, ?, ?)";
         PreparedStatement ps = null;
@@ -462,7 +480,7 @@ public class MyCore {
             }
         }
     }
-
+//	查询group
     public String idStringGroup(int id){
         String sql = "SELECT gname FROM `group` WHERE `group`.`gid` = ?";
         try {
@@ -477,7 +495,7 @@ public class MyCore {
         }
         return "";
     }
-
+//	提示信息
     public void pushNotice(String token, String theme, String content) throws RuntimeException{
         String sql = "INSERT INTO `notices` (`theme`, `content`, `group`, `uid`) VALUES (?, ?, ?, ?)";
         PreparedStatement ps = null;
@@ -510,7 +528,7 @@ public class MyCore {
             }
         }
     }
-
+//	回复信息
     public void replyNotice(String token, int id, String c) throws RuntimeException{
         String sql = "INSERT INTO `reply` (`uid`, `context`, `notice`) VALUES (?, ?, ?)";
         PreparedStatement ps = null;
@@ -520,6 +538,7 @@ public class MyCore {
         int ngroup = getNoticeGroup(id);
         String uid = tm.uidByToken(token);
         if (group < 0 || ngroup < 0 || uid == null) throw new RuntimeException("当前服务不可用");
+//      权限判断
         if (group != ngroup) throw new RuntimeException("无操作权限");
         try {
             ps = con.prepareStatement(sql);
@@ -540,7 +559,7 @@ public class MyCore {
             }
         }
     }
-
+//	获取提示信息的总数？
     public int getNoticeCount (String token){
         String sql = "SELECT count(*) FROM notices WHERE notices.`group` = ?";
         PreparedStatement ps = null;
@@ -571,7 +590,7 @@ public class MyCore {
         }
         return 0;
     }
-
+//	获取信息的组别？
     private int getNoticeGroup (int id){
         String sql = "SELECT notices.`group` FROM notices WHERE notices.id = ?";
         PreparedStatement ps = null;
@@ -600,7 +619,7 @@ public class MyCore {
         }
         return -1;
     }
-
+//	获取relpy列表
     public List<Reply> getReplys(int notice){
         String sql = "SELECT * FROM reply WHERE reply.notice = ? ORDER BY reply.timestamp DESC";
         PreparedStatement ps = null;
@@ -633,7 +652,7 @@ public class MyCore {
             }
         }
     }
-
+//	获取提示信息
     public List<Notices> getNotices(int start, int offset, String token){
         String sql = "SELECT * FROM notices WHERE notices.`group` = ? ORDER BY notices.timestamp DESC LIMIT ?,?";
         PreparedStatement ps = null;
@@ -669,7 +688,7 @@ public class MyCore {
             }
         }
     }
-
+//	用户登录的错误信息
     public String authQuery(String uname, String password) throws RuntimeException, SQLException {
         String tpass = my.util.EncodeUtil.MSSha1(password);
         if (con == null || !tm.state) throw new RuntimeException("当前授权服务不可用");

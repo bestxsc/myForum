@@ -22,35 +22,35 @@ public class Notices {
         this.group = group;
         this.timestamp = timestamp;
     }
-
+//获取id
     public int getId() {
         return id;
     }
-
+//获取uid
     public int getUid() {
         return uid;
     }
-
+//获取uname
     public String getUname() {
         return uname;
     }
-
+//获取姓名
     public String getName() {
         return name;
     }
-
+//获取主题
     public String getTheme() {
         return theme;
     }
-
+//获取内容
     public String getContent() {
         return content;
     }
-
+//获取组别
     public int getGroup() {
         return group;
     }
-
+//获取时间戳
     public Instant getTimestamp() {
         return timestamp;
     }

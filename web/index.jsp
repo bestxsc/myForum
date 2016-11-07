@@ -1,7 +1,10 @@
 <%--
   帖子列表页 / 主页
 --%>
+<%--trimDirectiveWhitespaces="true"使jsp输出的html去除多余空行 --%>
+<%--这种写法可以让包在多个页面中生效使用 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" trimDirectiveWhitespaces="true"%>
+<%--导入包 --%>>
 <%@ page import="my.MyCore" %>
 <%@ page import="my.util.TokenManager" %>
 <%@ page import="java.util.List" %>
@@ -37,6 +40,7 @@
 <html lang="zh-cn">
 <head>
     <meta charset="utf-8">
+    <!-- 下述代码的意思是告诉ie以最高级模式渲染文档，避免了版本升级造成影响。 -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>主页 - myForum</title>
